@@ -37,13 +37,13 @@ class Avizo(object):
                     file=(TEMPLATES_DIR / f"{template_name}.svg"),
                     is_json=False
                 )
-                
+
                 hex_color = scheme[new_color]
                 template = template.replace(self.matcher_color, hex_color, -1)
-                
+
                 scheme_dir = self.avizo_dst / scheme_name
                 scheme_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 new_svg = scheme_dir / f"{template_name}.svg"
                 self._write_file(file=new_svg, content=template)
                 result = new_svg.with_suffix('')
