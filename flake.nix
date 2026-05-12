@@ -1,38 +1,35 @@
-# ▄▀█ █▀ █▀ █▀▀ ▀█▀ █▀  █░█  █▄░█ █ ▀▄▀ ▀
-# █▀█ ▄█ ▄█ ██▄ ░█░ ▄█  ▀▀█  █░▀█ █ █░█ ▄
-# -- -- -- -- -- -- -- -- -- -- -- -- --
-
 {
-  description = ''
-    Assets collection (icons, wallpapers, styles, etc)
-    for declarative NixOS configuration
-  '';
+  description = "Assets collection for NixOS";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, ... }@inputs:
-  let
-    lib = nixpkgs.lib;
-    genSystems = lib.genAttrs [
-      "aarch64-linux"
-      "x86_64-linux"
-      "x86_64-darwin"
-      "aarch64-darwin"
-    ];
-    pkgsFor = genSystems (system:
-      import nixpkgs {
-        inherit system;
-        overlays = [ self.overlays.assets4nix ];
-      }
-    );
-  in {
-    packages = genSystems (system:
-      (self.overlays.default pkgsFor.${system} pkgsFor.${system})
-      // { default = self.packages.${system}.assets4nix; }
-    );
-    overlays = (import ./nix/overlays.nix { })
-    // { default = self.overlays.assets4nix ; };
-  };
+  outputs =
+    { self, nixpkgs }:
+    let
+      lib = nixpkgs.lib;
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      foreachSystem = f: lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
+    in
+    {
+      packages = foreachSystem (pkgs: {
+        default = pkgs.callPackage ./nix/default.nix { };
+      });
+
+      # Use callPackage directly to expose all checks from nix/checks.nix
+      checks = foreachSystem (pkgs: {
+        validate-assets = pkgs.callPackage ./nix/checks.nix {
+          assetsPkg = self.packages.${pkgs.system}.default;
+        };
+      });
+
+      nixosModules.default = import ./nix/module.nix self;
+      homeManagerModules.default = import ./nix/module.nix self;
+    };
 }
