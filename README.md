@@ -62,19 +62,56 @@ Import the module in your NixOS or Home Manager configuration:
 
 ### 2. Access Assets
 
-Once enabled, the `assets` attribute is available as a module argument:
+There are three ways to access assets in your configuration. Choose the one that best fits your style or specific use case.
+
+#### A. Via Module Argument (Recommended)
+The module injects `assets` directly into your module arguments. This is the cleanest and most ergonomic way.
 
 ```nix
 { assets, ... }: {
-  # Example: Setting a wallpaper for Hyprpaper
-  services.hyprpaper.settings.wallpaper = [
-    ",${assets.backgrounds.my-favorite-wallpaper}"
-  ];
-
-  # Example: Configuring a notification sound
-  programs.some-app.alertSound = assets.sounds.notification.arpeggio;
+  # GNOME Background example
+  dconf.settings."org/gnome/desktop/background" = {
+    picture-uri = "file://${assets.backgrounds.cat-leaves}";
+    picture-uri-dark = "file://${assets.backgrounds.cat-leaves}";
+  };
 }
 ```
+
+#### B. Via `config.assets`
+Perfect when you need to access assets inside a module that doesn't (or can't) use custom arguments, or when you prefer a more explicit path.
+
+```nix
+{ config, ... }: {
+  services.hyprpaper.settings = {
+    preload = [ "${config.assets.backgrounds.hexagon-grid}" ];
+    wallpaper = [ ",${config.assets.backgrounds.hexagon-grid}" ];
+  };
+}
+```
+
+#### C. Via `lib.assets`
+Useful for helper functions or library logic that has access to `lib` but not to the module's `config` or arguments.
+
+```nix
+{ lib, ... }: {
+  # Using a helper that takes an asset path
+  my.custom.notification = lib.my-utils.mkNotify lib.assets.sounds.system.sly;
+}
+```
+
+## Attribute Mapping Rules
+
+Assets are mapped based on their location in the `share/` directory:
+
+1.  **Directory Hierarchy**: Subdirectories become nested attributes (e.g., `share/sounds/alarm/` -> `assets.sounds.alarm`).
+2.  **Extension Removal**: File extensions are stripped (e.g., `cat-leaves.png` -> `cat-leaves`).
+3.  **Clean Keys**: Special characters in filenames are handled by Nix's attribute system.
+
+| File Path | Attribute Path |
+| :--- | :--- |
+| `share/backgrounds/cat-leaves.png` | `assets.backgrounds.cat-leaves` |
+| `share/sounds/notification/glitch.mp3` | `assets.sounds.notification.glitch` |
+| `share/sounds/system/case-closed.mp3` | `assets.sounds.system.case-closed` |
 
 ## Licensing
 

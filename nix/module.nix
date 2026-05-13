@@ -6,7 +6,7 @@ self:
   ...
 }:
 let
-  inherit (lib) mkIf;
+  inherit (lib) mkIf mkOption types;
   cfg = config.assets;
 
   # Get the package for the current system
@@ -20,9 +20,16 @@ in
     enable = lib.mkEnableOption "assets4nix" // {
       default = true;
     };
-  };
+  } // (lib.mapAttrs (name: _: mkOption {
+    type = types.anything;
+    readOnly = true;
+    description = "Asset paths for ${name}";
+  }) allAssets);
 
   config = mkIf cfg.enable {
+    # Also make them available under config.assets
+    assets = allAssets;
+
     # Expose the tree in lib.assets for general use
     lib.assets = allAssets;
 
