@@ -22,10 +22,9 @@
         default = pkgs.callPackage ./nix/default.nix { };
       });
 
-      # Use callPackage directly to expose all checks from nix/checks.nix
       checks = foreachSystem (pkgs: {
         validate-assets = pkgs.callPackage ./nix/checks.nix {
-          assetsPkg = self.packages.${pkgs.system}.default;
+          assetsPkg = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
         };
       });
 

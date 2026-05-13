@@ -10,7 +10,9 @@ let
   cfg = config.assets;
 
   # Get the package for the current system
-  assetsPkg = self.packages.${pkgs.system}.default or self.packages.x86_64-linux.default;
+  assetsPkg =
+    self.packages.${pkgs.stdenv.hostPlatform.system}.default
+    or self.packages.x86_64-linux.default;
 
   # Build the asset tree using the shared library logic
   allAssets = import ./lib.nix { inherit lib assetsPkg; };
