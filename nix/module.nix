@@ -30,9 +30,6 @@ in
     # Also make them available under config.assets
     assets = allAssets;
 
-    # Expose the tree in lib.assets for general use
-    lib.assets = allAssets;
-
     # Inject assets as a module argument for ergonomic access ({ assets, ... }:)
     _module.args.assets = allAssets;
   };

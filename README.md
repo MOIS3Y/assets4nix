@@ -89,16 +89,6 @@ Perfect when you need to access assets inside a module that doesn't (or can't) u
 }
 ```
 
-#### C. Via `lib.assets`
-Useful for helper functions or library logic that has access to `lib` but not to the module's `config` or arguments.
-
-```nix
-{ lib, ... }: {
-  # Using a helper that takes an asset path
-  my.custom.notification = lib.my-utils.mkNotify lib.assets.sounds.system.sly;
-}
-```
-
 ## Attribute Mapping Rules
 
 Assets are mapped based on their location in the `share/` directory:
